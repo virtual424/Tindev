@@ -1,0 +1,100 @@
+.profile {
+  flex: 0.8;
+  position: relative;
+  height: calc(100vh - 140.4px);
+  padding-top: 70px;
+  overflow-y: scroll;
+}
+
+.introCard {
+  display: flex;
+  width: 80%;
+  margin: 30px auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+  padding-bottom: 40px;
+}
+
+.tabs {
+  width: 90%;
+  margin: 0 auto;
+  display: flex;
+  position: relative;
+  left: 35px;
+  justify-content: flex-start;
+  margin-bottom: 15px;
+}
+
+.tab {
+  margin-left: 10px;
+}
+
+.avatar {
+  border-radius: 50%;
+  width: 150px;
+  height: 150px;
+  background-color: #262626;
+  position: absolute;
+  top: -100px;
+}
+
+.intro {
+  width: 100%;
+  margin-top: 50px;
+  display: flex;
+}
+
+.intro .iconButton {
+  height: 35px;
+  width: 35px;
+  margin-left: 25px;
+  position: relative;
+  /* top: 10px; */
+}
+
+.intro > div > h3 {
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+.intro > div > p {
+  font-weight: bold;
+}
+
+.reputation {
+  display: flex;
+  align-items: center;
+  width: 40%;
+}
+
+.infoInput {
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.reputationTab {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  margin-right: 30px;
+  margin-top: 20px;
+  padding: 5px;
+}
+
+.reputationTab > p {
+  font-weight: bold;
+}
+
+.reputationTab > p:first-child {
+  margin-bottom: 5px;
+}
+
+.reputationTab > p:last-child {
+  color: #0077ff;
+}

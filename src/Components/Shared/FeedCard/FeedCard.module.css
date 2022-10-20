@@ -1,0 +1,73 @@
+.feed {
+  width: 60%;
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.header > h3 {
+  margin-left: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.avatar {
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  background-color: #262626;
+}
+
+.content {
+  margin-top: 30px;
+  width: 100%;
+}
+
+.skillsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 25px 0;
+}
+
+.actions {
+  width: 100%;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.actionIcon {
+  margin-right: 25px;
+  cursor: pointer;
+}
+
+.actionIcon:hover {
+  color: #0077ff;
+}
+
+.actionIcon > span {
+  margin-left: 12px;
+}
+
+.comment {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.comment > input {
+  width: 90%;
+  margin-right: 18px;
+}
+
+.send {
+  background-color: #0077ff;
+  height: 45px;
+  width: 45px;
+}
