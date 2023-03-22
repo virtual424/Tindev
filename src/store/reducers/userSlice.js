@@ -1,20 +1,27 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const userInitialState = {
+  users: [],
   user: null,
-  isAuthenticated: false,
-  activated: false,
+  isLoading: false,
+  error: "",
 };
 
 const userSlice = createSlice({
   name: "user",
   initialState: userInitialState,
   reducers: {
-    setIsAuthenticated(state, action) {
-      state.isAuthenticated = action.payload;
+    setAllUsers(state, action) {
+      state.users = action.payload.users;
+    },
+    setLoading(state, action) {
+      state.isLoading = action.payload;
+    },
+    setError(state, action) {
+      state.error = action.payload.error;
     },
     setActivated(state, action) {
-      state.activated = action.payload;
+      state.user.activated = action.payload;
     },
     setUser(state, action) {
       state.user = action.payload.user;
@@ -22,10 +29,13 @@ const userSlice = createSlice({
     setUsername(state, action) {
       state.user.username = action.payload;
     },
+    setDesignation(state, action) {
+      state.user.designation = action.payload;
+    },
     setBasicInfo(state, action) {
       state.user.info.links = action.payload;
     },
-  
+
     addNewEducation(state, action) {
       if (!state.user.info.education) {
         state.user.info.education = [];

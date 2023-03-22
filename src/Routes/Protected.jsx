@@ -4,15 +4,15 @@ import { Navigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 
 const Protected = ({ children, ...rest }) => {
-  const isAuthenticated = useSelector(
-    (state) => state.userReducer.isAuthenticated
+  const user = useSelector(
+    (state) => state.userReducer.user
   );
 
   return (
     <Routes>
       <Route
         {...rest}
-        element={isAuthenticated ? children : <Navigate to="/" />}
+        element={user ? children : <Navigate to="/" />}
       />
     </Routes>
   );

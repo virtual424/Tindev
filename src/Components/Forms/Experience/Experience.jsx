@@ -14,31 +14,26 @@ import { useState, useEffect } from "react";
 import IconButton from "../../Shared/IconButton/IconButton";
 import { useSelector, useDispatch } from "react-redux";
 import { userActions } from "../../../store/reducers/userSlice";
-import { useMoralis } from "react-moralis";
+import UserService from "../../../store/services/User";
+import { useLocation } from "react-router-dom";
 
 const Experience = () => {
   const [changeInExperience, setChangeInExperience] = useState(false);
   const user = useSelector((state) => state.userReducer.user);
+  const location = useLocation();
   const dispatch = useDispatch();
-
-  const { Moralis } = useMoralis();
+  const isDiffUser = location && location.state && location.state.diffUser;
 
   const experienceList = user ? user.info.experience : [];
-  console.log(experienceList);
 
   const onEditdone = (expInfo, key) => {
     dispatch(userActions.editExperience({ expInfo, key }));
   };
 
   const saveEdits = async () => {
-    // dispatch(userActions.saveEducation());
-
-    const User = Moralis.Object.extend("_User");
-    const query = new Moralis.Query(User);
-    const myDetails = await query.first();
-
-    myDetails.set("experience", experienceList);
-    await myDetails.save();
+    await UserService.saveUserData(user).catch((e) =>
+      dispatch(userActions.setError({ error: e.message }))
+    );
   };
 
   return (
@@ -46,15 +41,21 @@ const Experience = () => {
       <div className={styles.heading}>
         <div>
           <FontAwesomeIcon icon={faLink} size="2xl" />
-          <h3>Add your Experince / Personal projects</h3>
+          <h3>
+            {!isDiffUser
+              ? "Add your Experince / Personal projects"
+              : "Experince / Personal projects"}
+          </h3>
         </div>
-        <Button
-          text="Add"
-          style={{ margin: "0" }}
-          onClick={() => {
-            dispatch(userActions.addNewExperience());
-          }}
-        />
+        {!isDiffUser && (
+          <Button
+            text="Add"
+            style={{ margin: "0" }}
+            onClick={() => {
+              dispatch(userActions.addNewExperience());
+            }}
+          />
+        )}
       </div>
       {!experienceList ? (
         <p>Add Your Education</p>
@@ -69,13 +70,14 @@ const Experience = () => {
                 saveEdits={saveEdits}
                 setChange={(value) => setChangeInExperience(value)}
                 onEditDone={onEditdone}
+                isDiffUser={isDiffUser}
               />
               <hr />
             </>
           );
         })
       )}
-      {changeInExperience && (
+      {!isDiffUser && changeInExperience && (
         <Button
           className={styles.nextButton}
           text="Save"
@@ -98,6 +100,7 @@ const ExperienceCard = ({
   onEditDone,
   data: { name, description, key, startDate, endDate },
   saveEdits,
+  isDiffUser,
 }) => {
   const [edit, setEdit] = useState(false);
   const [expName, setExpName] = useState(name);
@@ -142,7 +145,7 @@ const ExperienceCard = ({
         src="/assets/images/education.png"
         alt="education"
       />
-      {edit ? (
+      {!isDiffUser && edit ? (
         <div>
           <Input
             type="text"
@@ -187,39 +190,42 @@ const ExperienceCard = ({
       )}
 
       <div className={styles.controlButtons}>
-        {edit ? (
+        {!isDiffUser &&
+          (edit ? (
+            <IconButton
+              icon={faCheck}
+              size="xl"
+              className={styles.iconButton}
+              onClick={() => {
+                const expInfo = {
+                  name: expName,
+                  description: desc,
+                  startDate: start,
+                  endDate: end,
+                };
+                onEditDone(expInfo, key);
+                setEdit(false);
+              }}
+            />
+          ) : (
+            <IconButton
+              icon={faEdit}
+              size="xl"
+              className={styles.iconButton}
+              onClick={() => setEdit(true)}
+            />
+          ))}
+        {!isDiffUser && (
           <IconButton
-            icon={faCheck}
+            icon={faTrash}
             size="xl"
             className={styles.iconButton}
             onClick={() => {
-              const expInfo = {
-                name: expName,
-                description: desc,
-                startDate: start,
-                endDate: end,
-              };
-              onEditDone(expInfo, key);
-              setEdit(false);
+              dispatch(userActions.deleteExperience({ key }));
+              saveEdits();
             }}
           />
-        ) : (
-          <IconButton
-            icon={faEdit}
-            size="xl"
-            className={styles.iconButton}
-            onClick={() => setEdit(true)}
-          />
         )}
-        <IconButton
-          icon={faTrash}
-          size="xl"
-          className={styles.iconButton}
-          onClick={() => {
-            dispatch(userActions.deleteExperience({ key }));
-            saveEdits();
-          }}
-        />
       </div>
     </div>
   );

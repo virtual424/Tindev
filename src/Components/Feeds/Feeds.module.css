@@ -13,6 +13,34 @@
   width: 60%;
   margin: 30px 0;
 }
+.tabs {
+  width: 68%;
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 15px;
+}
+
+.tab {
+  background: #1d1d1d;
+  color: white;
+  padding: 8px 12px;
+  margin-left: 10px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.1s ease-in-out;
+}
+
+.tab:hover {
+  background: #0077ff;
+  color: #1d1d1d;
+}
+
+.selected {
+  background: #0077ff;
+  color: #1d1d1d;
+}
 
 .createPost {
   width: 60%;

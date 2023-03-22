@@ -86,6 +86,21 @@
   margin-left: 12px;
 }
 
+.reqAction {
+  background-color: #1d1d1d;
+  color: white;
+}
+
+.reqAction:hover {
+  background: #0077ff;
+  color: #1d1d1d;
+}
+
+.reqSelected {
+  background: #0077ff;
+  color: white;
+}
+
 .controlButtons {
   width: 100%;
   display: flex;

@@ -3,7 +3,6 @@ import {
   faEdit,
   faEnvelope,
   faPhone,
-  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
@@ -11,10 +10,11 @@ import Card from "../../Shared/Card/Card";
 import Input from "../../Shared/Input/Input";
 import styles from "./BasicInfo.module.css";
 import Button from "../../Shared/Button/Button";
-import { useState, useRef, useEffect } from "react";
-import { useMoralis, useMoralisWeb3Api } from "react-moralis";
+import { useState, useEffect } from "react";
+import { useMoralis } from "react-moralis";
 import IconButton from "../../Shared/IconButton/IconButton";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
+import UserService from "../../../store/services/User";
 import { useDispatch, useSelector } from "react-redux";
 import { userActions } from "../../../store/reducers/userSlice";
 
@@ -22,21 +22,8 @@ const BasicInfo = () => {
   const user = useSelector((state) => state.userReducer.user);
   const [changeInInfo, setChangeInInfo] = useState(false);
   const dispatch = useDispatch();
-  const { Moralis } = useMoralis();
-  // const [basicInfo, setBasicInfo] = useState({});
-
-  // useEffect(() => {
-  //   if (user) {
-  //     setBasicInfo({
-  //       Contact: user && user.info.links.Contact,
-  //       Email: user && user.info.links.Email,
-  //       GitHub: user && user.info.links.GitHub,
-  //       LinkedIn: user && user.info.links.LinkedIn,
-  //       Hackerrank: user && user.info.links.Hackerrank,
-  //       Other: user && user.info.links.Other,
-  //     });
-  //   }
-  // }, [user]);
+  const location = useLocation();
+  const isDiffUser = location && location.state && location.state.diffUser;
 
   const basicInfo = {
     Contact: user && user.info.links.Contact,
@@ -47,33 +34,10 @@ const BasicInfo = () => {
     Other: user && user.info.links.Other,
   };
 
-  console.log(basicInfo);
-
   const saveEdits = async () => {
-    const User = Moralis.Object.extend("_User");
-    const query = new Moralis.Query(User);
-    const myDetails = await query.first();
-
-    if (basicInfo.Contact) {
-      myDetails.set("Contact", basicInfo.Contact);
-    }
-    if (basicInfo.Email) {
-      myDetails.set("Email", basicInfo.Email);
-    }
-    if (basicInfo.LinkedIn) {
-      myDetails.set("LinkedIn", basicInfo.LinkedIn);
-    }
-    if (basicInfo.GitHub) {
-      myDetails.set("GitHub", basicInfo.GitHub);
-    }
-    if (basicInfo.Hackerrank) {
-      myDetails.set("Hackerrank", basicInfo.Hackerrank);
-    }
-    if (basicInfo.Other) {
-      myDetails.set("Other", basicInfo.Other);
-    }
-    myDetails.set("activated", true);
-    await myDetails.save();
+    await UserService.saveUserData(user).catch((e) =>
+      dispatch(userActions.setError({ error: e.message }))
+    );
     dispatch(userActions.setBasicInfo(basicInfo));
   };
 
@@ -91,6 +55,7 @@ const BasicInfo = () => {
           change={changeInInfo}
           setChange={(value) => setChangeInInfo(value)}
           saveInput={saveInput}
+          isDiffUser={isDiffUser}
         />
         <BasicInfoTab
           title="Email"
@@ -99,6 +64,7 @@ const BasicInfo = () => {
           change={changeInInfo}
           setChange={(value) => setChangeInInfo(value)}
           saveInput={saveInput}
+          isDiffUser={isDiffUser}
         />
       </div>
       <div className={`${styles.flexBox}`}>
@@ -111,6 +77,7 @@ const BasicInfo = () => {
           change={changeInInfo}
           setChange={(value) => setChangeInInfo(value)}
           saveInput={saveInput}
+          isDiffUser={isDiffUser}
         />
         <BasicInfoTab
           title="LinkedIn"
@@ -121,6 +88,7 @@ const BasicInfo = () => {
           change={changeInInfo}
           setChange={(value) => setChangeInInfo(value)}
           saveInput={saveInput}
+          isDiffUser={isDiffUser}
         />
       </div>
 
@@ -134,6 +102,7 @@ const BasicInfo = () => {
           change={changeInInfo}
           setChange={(value) => setChangeInInfo(value)}
           saveInput={saveInput}
+          isDiffUser={isDiffUser}
         />
 
         <BasicInfoTab
@@ -145,10 +114,11 @@ const BasicInfo = () => {
           change={changeInInfo}
           setChange={(value) => setChangeInInfo(value)}
           saveInput={saveInput}
+          isDiffUser={isDiffUser}
         />
       </div>
 
-      {changeInInfo && (
+      {!isDiffUser && changeInInfo && (
         <Button
           className={styles.nextButton}
           text="Save"
@@ -175,6 +145,7 @@ const BasicInfoTab = ({
   change,
   setChange,
   saveInput,
+  isDiffUser,
 }) => {
   const [edit, setEdit] = useState(false);
   const [inputValue, setInputValue] = useState(content);
@@ -222,24 +193,25 @@ const BasicInfoTab = ({
         {contentComponent}
       </div>
 
-      {edit ? (
-        <IconButton
-          icon={faCheck}
-          size="xl"
-          className={styles.iconButton}
-          onClick={() => {
-            saveInput(title, inputValue);
-            setEdit(false);
-          }}
-        />
-      ) : (
-        <IconButton
-          icon={faEdit}
-          size="xl"
-          className={styles.iconButton}
-          onClick={() => setEdit(true)}
-        />
-      )}
+      {!isDiffUser &&
+        (edit ? (
+          <IconButton
+            icon={faCheck}
+            size="xl"
+            className={styles.iconButton}
+            onClick={() => {
+              saveInput(title, inputValue);
+              setEdit(false);
+            }}
+          />
+        ) : (
+          <IconButton
+            icon={faEdit}
+            size="xl"
+            className={styles.iconButton}
+            onClick={() => setEdit(true)}
+          />
+        ))}
     </div>
   );
 };

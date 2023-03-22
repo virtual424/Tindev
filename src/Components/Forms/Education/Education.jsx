@@ -11,42 +11,29 @@ import Input from "../../Shared/Input/Input";
 import Button from "../../Shared/Button/Button";
 import styles from "./Education.module.css";
 import { useState, useEffect } from "react";
+import UserService from "../../../store/services/User";
 import IconButton from "../../Shared/IconButton/IconButton";
 import { useSelector, useDispatch } from "react-redux";
 import { userActions } from "../../../store/reducers/userSlice";
-import { useMoralis } from "react-moralis";
+import { useLocation, useParams } from "react-router-dom";
 
 const Education = () => {
   const [changeInEducation, setChangeInEducation] = useState(false);
   const user = useSelector((state) => state.userReducer.user);
+  const location = useLocation();
+  const isDiffUser = location && location.state && location.state.diffUser;
   const dispatch = useDispatch();
 
-  const { Moralis } = useMoralis();
-
-  // let educationInfo = {
-  //   key: user && user.info.education.key,
-  //   instituteName: user && user.info.education.instituteName,
-  //   designation: user && user.info.education.designation,
-  //   grade: user && user.info.education.grade,
-  //   duration: user && user.info.education.duration,
-  // };
-
   const educationList = user ? user.info.education : [];
-  console.log(educationList);
 
   const onEditdone = (eduInfo, key) => {
     dispatch(userActions.editEducation({ eduInfo, key }));
   };
 
   const saveEdits = async () => {
-    // dispatch(userActions.saveEducation());
-
-    const User = Moralis.Object.extend("_User");
-    const query = new Moralis.Query(User);
-    const myDetails = await query.first();
-
-    myDetails.set("education", educationList);
-    await myDetails.save();
+    await UserService.saveUserData(user).catch((e) =>
+      dispatch(userActions.setError({ error: e.message }))
+    );
   };
 
   return (
@@ -54,15 +41,17 @@ const Education = () => {
       <div className={styles.heading}>
         <div>
           <FontAwesomeIcon icon={faLink} size="2xl" />
-          <h3>Add your Education</h3>
+          {!isDiffUser ? <h3>Add your Education</h3> : <h3>Education</h3>}
         </div>
-        <Button
-          text="Add"
-          style={{ margin: "0" }}
-          onClick={() => {
-            dispatch(userActions.addNewEducation());
-          }}
-        />
+        {!isDiffUser && (
+          <Button
+            text="Add"
+            style={{ margin: "0" }}
+            onClick={() => {
+              dispatch(userActions.addNewEducation());
+            }}
+          />
+        )}
       </div>
       {!educationList ? (
         <p>Add Your Education</p>
@@ -77,13 +66,14 @@ const Education = () => {
                 saveEdits={saveEdits}
                 setChange={(value) => setChangeInEducation(value)}
                 onEditDone={onEditdone}
+                isDiffUser={isDiffUser}
               />
               <hr />
             </>
           );
         })
       )}
-      {changeInEducation && (
+      {!isDiffUser && changeInEducation && (
         <Button
           className={styles.nextButton}
           text="Save"
@@ -106,6 +96,7 @@ const EducationCard = ({
   onEditDone,
   data: { instituteName, designation, grade: grades, key, startDate, endDate },
   saveEdits,
+  isDiffUser,
 }) => {
   const [edit, setEdit] = useState(false);
   const [institute, setInstitute] = useState(instituteName);
@@ -155,7 +146,7 @@ const EducationCard = ({
         src="/assets/images/education.png"
         alt="education"
       />
-      {edit ? (
+      {!isDiffUser && edit ? (
         <div>
           <Input
             type="text"
@@ -210,40 +201,43 @@ const EducationCard = ({
       )}
 
       <div className={styles.controlButtons}>
-        {edit ? (
+        {!isDiffUser &&
+          (edit ? (
+            <IconButton
+              icon={faCheck}
+              size="xl"
+              className={styles.iconButton}
+              onClick={() => {
+                const eduInfo = {
+                  instituteName: institute,
+                  designation: desig,
+                  startDate: start,
+                  endDate: end,
+                  grade: grade,
+                };
+                onEditDone(eduInfo, key);
+                setEdit(false);
+              }}
+            />
+          ) : (
+            <IconButton
+              icon={faEdit}
+              size="xl"
+              className={styles.iconButton}
+              onClick={() => setEdit(true)}
+            />
+          ))}
+        {!isDiffUser && (
           <IconButton
-            icon={faCheck}
+            icon={faTrash}
             size="xl"
             className={styles.iconButton}
             onClick={() => {
-              const eduInfo = {
-                instituteName: institute,
-                designation: desig,
-                startDate: start,
-                endDate: end,
-                grade: grade,
-              };
-              onEditDone(eduInfo, key);
-              setEdit(false);
+              dispatch(userActions.deleteEducation({ key }));
+              saveEdits();
             }}
           />
-        ) : (
-          <IconButton
-            icon={faEdit}
-            size="xl"
-            className={styles.iconButton}
-            onClick={() => setEdit(true)}
-          />
         )}
-        <IconButton
-          icon={faTrash}
-          size="xl"
-          className={styles.iconButton}
-          onClick={() => {
-            dispatch(userActions.deleteEducation({ key }));
-            saveEdits();
-          }}
-        />
       </div>
     </div>
   );

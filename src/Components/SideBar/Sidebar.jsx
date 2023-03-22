@@ -1,14 +1,16 @@
 import React from "react";
 import styles from "./Sidebar.module.css";
 import { Link, useLocation } from "react-router-dom";
-import { useMoralis } from "react-moralis";
 import Button from "../Shared/Button/Button";
+import AuthService from "../../store/services/Auth";
+import { useSelector } from "react-redux";
 
 const Sidebar = () => {
-  const { Moralis } = useMoralis();
-
   const location = useLocation();
-
+  const user = useSelector((state) => state.userReducer.user);
+  const logout = async () => {
+    await AuthService.signOut();
+  };
   return (
     <div className={styles.sidebar}>
       <div>
@@ -28,7 +30,7 @@ const Sidebar = () => {
           <p>Feeds</p>
         </Link>
         <Link
-          to="/profile"
+          to={`/profile/${user.uid}`}
           className={
             location.pathname === "/profile"
               ? `${styles.menuItems} ${styles.selected}`
@@ -73,15 +75,7 @@ const Sidebar = () => {
           <p>Editor</p>
         </Link>
       </div>
-      <Button
-        className={styles.logout}
-        text="Logout"
-        onClick={() => {
-          Moralis.User.logOut().then(() => {
-            window.location.reload();
-          });
-        }}
-      />
+      <Button className={styles.logout} text="Logout" onClick={logout} />
     </div>
   );
 };

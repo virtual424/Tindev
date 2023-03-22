@@ -4,32 +4,45 @@ import Input from "../Shared/Input/Input";
 import Button from "../Shared/Button/Button";
 import styles from "./Feeds.module.css";
 import AddPost from "../AddPost/AddPost";
-import { useState, useEffect } from "react";
-import { useMoralis } from "react-moralis";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import FeedService from "../../store/services/Feed";
+import { feedsActions } from "../../store/reducers/feedSlice";
+
+const FeedType = {
+  All: "All Posts",
+  My: "My Posts",
+  Req: "Requirements",
+};
 
 const Feeds = () => {
+  const tabs = [{ type: FeedType.All, text: "All Posts" }];
+
   const navigate = useNavigate();
   const [isAddPost, setIsAddPost] = useState(false);
-  const { Moralis } = useMoralis();
+  const activated = useSelector((state) => state.userReducer.user.activated);
+  const [selected, setSelected] = useState(tabs[0].type);
+  const { feeds, isLoading, error } = useSelector(
+    (state) => state.feedsReducer
+  );
+  const [currFeeds, setCurrFeeds] = useState([]);
+  const user = useSelector((state) => state.userReducer.user);
+  const dispatch = useDispatch();
 
-  const activated = useSelector((state) => state.userReducer.activated);
-  const [projectArr, setprojectArr] = useState([]);
-
-  useEffect(() => {
-    async function getProjects() {
-      try {
-        const Projects = Moralis.Object.extend("Projects");
-        const query = new Moralis.Query(Projects);
-        const results = await query.find();
-        setprojectArr(results);
-      } catch (error) {
-        console.error(error);
+  useEffect(async () => {
+    dispatch(feedsActions.setLoading(true));
+    await FeedService.getAllFeeds((feedList, error) => {
+      if (error) {
+        dispatch(feedsActions.setError({ error: error.message }));
+      } else {
+        dispatch(feedsActions.setFeeds({ feeds: feedList }));
+        setCurrFeeds(feedList);
       }
-    }
-    getProjects();
+      dispatch(feedsActions.setLoading(false));
+    });
   }, []);
+  console.log(currFeeds);
 
   function changeToPost() {
     if (!activated) {
@@ -38,9 +51,15 @@ const Feeds = () => {
     setIsAddPost(true);
   }
 
-  function navToProfile() {
-    navigate("/profile");
-  }
+  const filterFeeds = (feedType) => {
+    if (feedType === FeedType.All) {
+      setCurrFeeds(feeds);
+    } else if (feedType === FeedType.My) {
+      setCurrFeeds(feeds.filter((feed) => feed.data.uid === user.uid));
+    } else {
+      setCurrFeeds(feeds.filter((feed) => feed.data.isRequirement === true));
+    }
+  };
 
   return (
     <div className={styles.feeds}>
@@ -68,12 +87,30 @@ const Feeds = () => {
       )}
       {isAddPost && <AddPost onCancel={() => setIsAddPost(false)} />}
       <hr />
-      {projectArr.map((project) => (
-        <>
-          <FeedCard project={project} />
-          <hr />
-        </>
-      ))}
+      {isLoading && <p>Loading....</p>}
+      <div className={styles.tabs}>
+        {tabs.map((tab) => (
+          <div
+            className={`${styles.tab}  ${
+              selected === tab.type && styles.selected
+            }`}
+            onClick={() => {
+              setSelected(tab.type);
+              filterFeeds(tab.type);
+            }}
+          >
+            {tab.text}
+          </div>
+        ))}
+      </div>
+      {currFeeds &&
+        currFeeds.map((feedData) => (
+          <>
+            <FeedCard feedData={feedData} />
+            <hr />
+          </>
+        ))}
+      {error && <p>${error}</p>}
     </div>
   );
 };

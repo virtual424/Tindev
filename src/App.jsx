@@ -10,56 +10,31 @@ import Feeds from "./Components/Feeds/Feeds";
 import Rightbar from "./Components/RightBar/RightBar.jsx";
 import Protected from "./Routes/Protected";
 import { useMoralis } from "react-moralis";
+import UserService from "./store/services/User";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { userActions } from "./store/reducers/userSlice";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebase";
+import AuthService from "./store/services/Auth";
 
 const App = () => {
-  const { isAuthenticated, user } = useMoralis();
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (user) {
-      const {
-        activated,
-        ethAddress,
-        skills,
-        username,
-        Email,
-        Contact,
-        GitHub,
-        education,
-        LinkedIn,
-        experience,
-        Other,
-        Hackerrank,
-      } = user.attributes;
-
-      const newUser = {
-        id: user.id,
-        ethAddress,
-        username,
-        info: {
-          links: {
-            Contact,
-            Email,
-            GitHub,
-            LinkedIn,
-            Hackerrank,
-            Other,
-          },
-          education,
-          experience,
-          skills,
-        },
-      };
-      dispatch(userActions.setUser({ user: newUser }));
-      dispatch(userActions.setActivated(activated));
-    } else {
-      dispatch(userActions.setUser({ user: null }));
-    }
-    dispatch(userActions.setIsAuthenticated(isAuthenticated));
-  }, [isAuthenticated]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        UserService.getUser(user.uid).then((user) => {
+          dispatch(userActions.setUser({ user }));
+        });
+      } else {
+        dispatch(userActions.setUser({ user: null }));
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [dispatch]);
 
   return (
     <>
@@ -74,7 +49,7 @@ const App = () => {
           <Rightbar />
         </div>
       </Protected>
-      <Protected path="/profile">
+      <Protected path={"/profile/:userId"}>
         <div className="page">
           <Sidebar />
           <Profile />

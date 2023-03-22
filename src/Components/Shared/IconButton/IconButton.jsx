@@ -2,7 +2,15 @@ import React from "react";
 import styles from "./IconButton.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-const IconButton = ({ className, icon, size, onClick, selected, key }) => {
+const IconButton = ({
+  className,
+  icon,
+  size,
+  onClick,
+  selected,
+  key,
+  text,
+}) => {
   return (
     <button
       key={key}
@@ -11,7 +19,7 @@ const IconButton = ({ className, icon, size, onClick, selected, key }) => {
       } ${className} `}
       onClick={onClick}
     >
-      <FontAwesomeIcon icon={icon} size={size} />
+      {icon ? <FontAwesomeIcon icon={icon} size={size} /> : text}
     </button>
   );
 };

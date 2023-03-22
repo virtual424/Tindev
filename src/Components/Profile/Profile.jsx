@@ -1,13 +1,5 @@
-import {
-  faBuilding,
-  faCheck,
-  faEdit,
-  faInfo,
-  faLink,
-  faSchool,
-  faTerminal,
-} from "@fortawesome/free-solid-svg-icons";
-import React, { useState } from "react";
+import { faCheck, faEdit } from "@fortawesome/free-solid-svg-icons";
+import React, { useEffect, useState } from "react";
 import BasicInfo from "../Forms/BasicInfo/BasicInfo";
 import Skills from "../Forms/Skills/Skills";
 import Education from "../Forms/Education/Education";
@@ -17,49 +9,61 @@ import styles from "./Profile.module.css";
 import Input from "../Shared/Input/Input";
 import { useDispatch, useSelector } from "react-redux";
 import { userActions } from "../../store/reducers/userSlice";
-import { useMoralis } from "react-moralis";
 import Experience from "../Forms/Experience/Experience";
 import Button from "../Shared/Button/Button";
+import UserService from "../../store/services/User";
+import FeedCard from "../Shared/FeedCard/FeedCard";
+import Rightbar from "../RightBar/RightBar";
+import TabButton from "../Shared/TabButton/TabButton";
+import { useLocation, useParams } from "react-router-dom";
 
 const Components = {
-  BasicInfo: "basic_info",
-  Education: "education",
-  Experience: "experience",
-  Skills: "skills",
+  Resume: "resume",
+  My: "all-posts",
+  Req: "requirements",
 };
 
 const Profile = () => {
-  const [component, setComponent] = useState(Components.BasicInfo);
+  const [selected, setSelected] = useState(Components.Resume);
   const [edit, setEdit] = useState(false);
-  const { Moralis } = useMoralis();
+  const location = useLocation();
   const user = useSelector((state) => state.userReducer.user);
+  const feeds = useSelector((state) => state.feedsReducer.feeds);
   const dispatch = useDispatch();
+  const { userId } = useParams();
+  const isDiffUser = location && location.state && location.state.diffUser;
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const newUser = await UserService.getUser(userId);
+        // dispatch(userActions.setUser({ newUser }));
+      } catch (e) {
+        dispatch(userActions.setError({ error: e.message }));
+      }
+    }
+
+    if (isDiffUser) {
+      fetchData();
+    }
+  }, [dispatch, userId]);
 
   const tabs = [
     {
-      icon: faInfo,
-      componentType: Components.BasicInfo,
-      //   component: <BasicInfo />,
+      text: "Resume",
+      type: Components.Resume,
     },
     {
-      icon: faSchool,
-      componentType: Components.Education,
-      //   component: <BasicInfo />,
+      text: "My Posts",
+      type: Components.My,
     },
     {
-      icon: faBuilding,
-      componentType: Components.Experience,
-      //   component: <BasicInfo />,
-    },
-
-    {
-      icon: faTerminal,
-      componentType: Components.Skills,
-      //   component: <Skills />,
+      text: "Requirements",
+      type: Components.Req,
     },
   ];
 
-  const saveProfileHandler = () => {
+  const saveProfileHandler = async () => {
     if (
       user.username &&
       user.info.links &&
@@ -69,20 +73,18 @@ const Profile = () => {
       user.info.experience.length !== 0 &&
       user.info.skills &&
       user.info.skills.length !== 0
-    )
+    ) {
       dispatch(userActions.setActivated(true));
-    else dispatch(userActions.setActivated(false));
-  };
 
-  const saveEdits = async () => {
-    const User = Moralis.Object.extend("_User");
-    const query = new Moralis.Query(User);
-    const myDetails = await query.first();
-
-    if (user) {
-      myDetails.set("username", user.username);
+      await UserService.setActivated(user, true).catch((e) =>
+        dispatch(userActions.setError({ error: e.message }))
+      );
+    } else {
+      await UserService.setActivated(user, false).catch((e) =>
+        dispatch(userActions.setError({ error: e.message }))
+      );
+      dispatch(userActions.setActivated(false));
     }
-    await myDetails.save();
   };
 
   return (
@@ -105,31 +107,65 @@ const Profile = () => {
             ) : (
               <h3>{user && user.username}</h3>
             )}
-            <p>{user && user.info.education[0].designation}</p>
+          </div>
+          {!isDiffUser &&
+            (edit ? (
+              <IconButton
+                icon={faCheck}
+                size="xl"
+                className={styles.iconButton}
+                onClick={() => {
+                  setEdit(false);
+                  // saveEdits();
+                }}
+              />
+            ) : (
+              <IconButton
+                icon={faEdit}
+                size="xl"
+                className={styles.iconButton}
+                onClick={() => {
+                  setEdit(true);
+                }}
+              />
+            ))}
+        </div>
+        <div className={`${styles.intro} ${styles.designation}`}>
+          <div>
+            {edit ? (
+              <Input
+                className={styles.infoInput}
+                value={user && user.designation}
+                onChange={(e) =>
+                  dispatch(userActions.setDesignation(e.target.value))
+                }
+              />
+            ) : (
+              <h3>{user && user.designation}</h3>
+            )}
           </div>
 
-          {edit ? (
-            <IconButton
-              icon={faCheck}
-              size="xl"
-              className={styles.iconButton}
-              onClick={() => {
-                setEdit(false);
-                saveEdits();
-              }}
-            />
-          ) : (
-            <IconButton
-              icon={faEdit}
-              size="xl"
-              className={styles.iconButton}
-              onClick={() => {
-                setEdit(true);
-              }}
-            />
-          )}
+          {!isDiffUser &&
+            (edit ? (
+              <IconButton
+                icon={faCheck}
+                size="s"
+                className={styles.iconButton}
+                onClick={() => {
+                  setEdit(false);
+                }}
+              />
+            ) : (
+              <IconButton
+                icon={faEdit}
+                size="s"
+                className={styles.iconButton}
+                onClick={() => {
+                  setEdit(true);
+                }}
+              />
+            ))}
         </div>
-
         <div className={styles.reputation}>
           <div className={styles.reputationTab}>
             <p>Posts</p>
@@ -141,28 +177,62 @@ const Profile = () => {
           </div>
         </div>
       </Card>
-
       <div className={styles.tabs}>
         {tabs.map((tab) => (
-          <IconButton
-            key={tab.component}
-            icon={tab.icon}
-            className={styles.tab}
-            size="2xl"
-            selected={component === tab.componentType}
-            onClick={() => setComponent(tab.componentType)}
+          <TabButton
+            content={tab.text}
+            selected={selected === tab.type}
+            onClickHandler={() => {
+              setSelected(tab.type);
+            }}
           />
         ))}
       </div>
-      <BasicInfo />
-      <Education />
-      <Experience />
-      <Skills />
-      <Button
-        text="Save Profile"
-        style={{ marginBottom: "30px" }}
-        onClick={saveProfileHandler}
-      />
+      {selected === Components.Resume && (
+        <>
+          <BasicInfo />
+          <Education />
+          <Experience />
+          <Skills />
+          {!isDiffUser && (
+            <Button
+              text="Save Profile"
+              style={{ marginBottom: "30px" }}
+              onClick={saveProfileHandler}
+            />
+          )}
+        </>
+      )}
+      {selected === Components.My && (
+        <div className={styles.page2}>
+          <div className={styles.posts}>
+            {feeds
+              .filter((feed) => feed.data.uid === user.uid)
+              .map((feedData) => (
+                <>
+                  <FeedCard feedData={feedData} />
+                  <hr />
+                </>
+              ))}
+          </div>
+          <Rightbar className={styles.profileRight} />
+        </div>
+      )}
+      {selected === Components.Req && (
+        <div className={styles.page2}>
+          <div className={styles.posts}>
+            {feeds
+              .filter((feed) => feed.data.isRequirement === true)
+              .map((feedData) => (
+                <>
+                  <FeedCard feedData={feedData} />
+                  <hr />
+                </>
+              ))}
+          </div>
+          <Rightbar className={styles.profileRight} />
+        </div>
+      )}
     </div>
   );
 };
